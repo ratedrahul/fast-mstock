@@ -1,0 +1,425 @@
+{
+  "info": {
+    "name": "MS-Fast — mStock Trading API Gateway",
+    "description": "Full collection for the MS-Fast FastAPI gateway over the mStock Trading API (Type A). Set the collection variables baseUrl, apiKey, accessToken (and gatewayKey if enabled).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000" },
+    { "key": "apiKey", "value": "" },
+    { "key": "accessToken", "value": "" },
+    { "key": "gatewayKey", "value": "" }
+  ],
+  "auth": { "type": "noauth" },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login (trigger OTP)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"MA1234567\",\n  \"password\": \"Secret@123\"\n}" }
+          }
+        },
+        {
+          "name": "Generate Session (OTP)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/session", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "session"] },
+            "body": { "mode": "raw", "raw": "{\n  \"api_key\": \"{{apiKey}}\",\n  \"request_token\": \"123456\",\n  \"checksum\": \"L\"\n}" }
+          }
+        },
+        {
+          "name": "Verify TOTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/verify-totp", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "verify-totp"] },
+            "body": { "mode": "raw", "raw": "{\n  \"api_key\": \"{{apiKey}}\",\n  \"totp\": \"654321\"\n}" }
+          }
+        },
+        {
+          "name": "Fund Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/fund-summary", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "fund-summary"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/logout", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Place Order (regular)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/orders/regular", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orders", "regular"] },
+            "body": { "mode": "raw", "raw": "{\n  \"tradingsymbol\": \"INFY-EQ\",\n  \"exchange\": \"NSE\",\n  \"transaction_type\": \"BUY\",\n  \"order_type\": \"LIMIT\",\n  \"quantity\": 10,\n  \"product\": \"MIS\",\n  \"validity\": \"DAY\",\n  \"price\": 1250,\n  \"trigger_price\": 0,\n  \"disclosed_quantity\": 0\n}" }
+          }
+        },
+        {
+          "name": "Modify Order",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/orders/regular/1000000000016050", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orders", "regular", "1000000000016050"] },
+            "body": { "mode": "raw", "raw": "{\n  \"order_type\": \"LIMIT\",\n  \"quantity\": 5,\n  \"price\": 2000,\n  \"validity\": \"DAY\",\n  \"trigger_price\": 0,\n  \"disclosed_quantity\": 0\n}" }
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/orders/regular/1161241001100", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orders", "regular", "1161241001100"] }
+          }
+        },
+        {
+          "name": "Cancel All",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/orders/cancel-all", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orders", "cancel-all"] }
+          }
+        },
+        {
+          "name": "Order Book",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/orders/book", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orders", "book"] }
+          }
+        },
+        {
+          "name": "Order Details",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/orders/details", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orders", "details"] },
+            "body": { "mode": "raw", "raw": "{\n  \"order_no\": \"1157250130101\",\n  \"segment\": \"E\"\n}" }
+          }
+        },
+        {
+          "name": "Trade Book",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/orders/trade-book", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orders", "trade-book"] }
+          }
+        },
+        {
+          "name": "Trade History",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/orders/trades", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orders", "trades"] },
+            "body": { "mode": "raw", "raw": "{\n  \"fromdate\": \"2025-01-05\",\n  \"todate\": \"2025-01-10\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Portfolio & Positions",
+      "item": [
+        {
+          "name": "Holdings",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/portfolio/holdings", "host": ["{{baseUrl}}"], "path": ["api", "v1", "portfolio", "holdings"] }
+          }
+        },
+        {
+          "name": "Positions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/portfolio/positions", "host": ["{{baseUrl}}"], "path": ["api", "v1", "portfolio", "positions"] }
+          }
+        },
+        {
+          "name": "Convert Position",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/portfolio/convert-position", "host": ["{{baseUrl}}"], "path": ["api", "v1", "portfolio", "convert-position"] },
+            "body": { "mode": "raw", "raw": "{\n  \"tradingsymbol\": \"ACC\",\n  \"exchange\": \"NSE\",\n  \"transaction_type\": \"BUY\",\n  \"position_type\": \"DAY\",\n  \"quantity\": 1,\n  \"old_product\": \"CNC\",\n  \"new_product\": \"MIS\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Margins",
+      "item": [
+        {
+          "name": "Calculate Order Margin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/margins/orders", "host": ["{{baseUrl}}"], "path": ["api", "v1", "margins", "orders"] },
+            "body": { "mode": "raw", "raw": "{\n  \"exchange\": \"NSE\",\n  \"tradingsymbol\": \"INFY\",\n  \"transaction_type\": \"BUY\",\n  \"variety\": \"regular\",\n  \"product\": \"CNC\",\n  \"order_type\": \"MARKET\",\n  \"quantity\": 1,\n  \"price\": 0,\n  \"trigger_price\": 0\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Market Data",
+      "item": [
+        {
+          "name": "OHLC Quote",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/market/quote/ohlc?i=NSE:ACC&i=BSE:ACC", "host": ["{{baseUrl}}"], "path": ["api", "v1", "market", "quote", "ohlc"], "query": [ { "key": "i", "value": "NSE:ACC" }, { "key": "i", "value": "BSE:ACC" } ] }
+          }
+        },
+        {
+          "name": "LTP Quote",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/market/quote/ltp?i=NSE:ACC", "host": ["{{baseUrl}}"], "path": ["api", "v1", "market", "quote", "ltp"], "query": [ { "key": "i", "value": "NSE:ACC" } ] }
+          }
+        },
+        {
+          "name": "Instruments (Scrip Master CSV)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/market/instruments", "host": ["{{baseUrl}}"], "path": ["api", "v1", "market", "instruments"] }
+          }
+        },
+        {
+          "name": "Historical Candles",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/market/historical/NSE/11536/60minute?from=2025-01-05&to=2025-01-10", "host": ["{{baseUrl}}"], "path": ["api", "v1", "market", "historical", "NSE", "11536", "60minute"], "query": [ { "key": "from", "value": "2025-01-05" }, { "key": "to", "value": "2025-01-10" } ] }
+          }
+        },
+        {
+          "name": "Intraday Candles",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/market/intraday/1/22/Minute", "host": ["{{baseUrl}}"], "path": ["api", "v1", "market", "intraday", "1", "22", "Minute"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Option Chain",
+      "item": [
+        {
+          "name": "Option Chain Master",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/option-chain/master/5", "host": ["{{baseUrl}}"], "path": ["api", "v1", "option-chain", "master", "5"] }
+          }
+        },
+        {
+          "name": "Option Chain Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/option-chain/data/2/1432996200/22", "host": ["{{baseUrl}}"], "path": ["api", "v1", "option-chain", "data", "2", "1432996200", "22"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Baskets",
+      "item": [
+        {
+          "name": "Create Basket",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/baskets", "host": ["{{baseUrl}}"], "path": ["api", "v1", "baskets"] },
+            "body": { "mode": "raw", "raw": "{\n  \"BaskName\": \"Test Basket\",\n  \"BaskDesc\": \"Test Basket Description\"\n}" }
+          }
+        },
+        {
+          "name": "Fetch Baskets",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/baskets", "host": ["{{baseUrl}}"], "path": ["api", "v1", "baskets"] }
+          }
+        },
+        {
+          "name": "Rename Basket",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/baskets", "host": ["{{baseUrl}}"], "path": ["api", "v1", "baskets"] },
+            "body": { "mode": "raw", "raw": "{\n  \"basketName\": \"New Basket Name\",\n  \"BasketId\": \"269\"\n}" }
+          }
+        },
+        {
+          "name": "Delete Basket",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/baskets", "host": ["{{baseUrl}}"], "path": ["api", "v1", "baskets"] },
+            "body": { "mode": "raw", "raw": "{\n  \"BasketId\": \"269\"\n}" }
+          }
+        },
+        {
+          "name": "Calculate Basket",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/baskets/calculate", "host": ["{{baseUrl}}"], "path": ["api", "v1", "baskets", "calculate"] },
+            "body": { "mode": "raw", "raw": "{\n  \"include_exist_pos\": \"0\",\n  \"ord_product\": \"C\",\n  \"disc_qty\": \"0\",\n  \"segment\": \"E\",\n  \"trigger_price\": \"0\",\n  \"scriptcode\": \"11915\",\n  \"ord_type\": \"LMT\",\n  \"basket_name\": \"Test Basket\",\n  \"operation\": \"I\",\n  \"order_validity\": \"DAY\",\n  \"order_qty\": \"1\",\n  \"script_stat\": \"A\",\n  \"buy_sell_indi\": \"B\",\n  \"basket_priority\": \"1\",\n  \"order_price\": \"19.02\",\n  \"basket_id\": \"269\",\n  \"exch_id\": \"NSE\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Top Gainers / Losers",
+      "item": [
+        {
+          "name": "Gainers / Losers",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/movers", "host": ["{{baseUrl}}"], "path": ["api", "v1", "movers"] },
+            "body": { "mode": "raw", "raw": "{\n  \"Exchange\": \"1\",\n  \"SecurityIdCode\": \"13\",\n  \"segment\": \"1\",\n  \"TypeFlag\": \"G\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          }
+        },
+        {
+          "name": "mStock Health Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Api-Key", "value": "{{apiKey}}" },
+              { "key": "X-Access-Token", "value": "{{accessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/mstock/health-statistics", "host": ["{{baseUrl}}"], "path": ["api", "v1", "mstock", "health-statistics"] }
+          }
+        }
+      ]
+    }
+  ]
+}
