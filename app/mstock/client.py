@@ -8,6 +8,7 @@ low-latency behaviour required for trading.
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any
 
 import httpx
@@ -35,6 +36,8 @@ class MStockClient:
         self._version = version
         self._timeout = timeout
         self._client: httpx.AsyncClient | None = None
+        self._egress_ip: str | None = None
+        self._egress_ip_ts: float = 0.0
 
     # -- lifecycle ------------------------------------------------------------
     async def startup(self) -> None:
@@ -55,6 +58,36 @@ class MStockClient:
     @property
     def ws_ready(self) -> bool:
         return self._client is not None
+
+    async def get_egress_ip(self, *, force: bool = False) -> str | None:
+        """Return the server's public outbound IP (the IP mStock sees).
+
+        This is the address that must be whitelisted in the mStock API IP
+        settings. Result is cached for an hour since it rarely changes.
+        """
+        now = time.time()
+        if not force and self._egress_ip and (now - self._egress_ip_ts) < 3600:
+            return self._egress_ip
+        if self._client is None:
+            return None
+
+        # Absolute URLs bypass the configured base_url.
+        providers = (
+            ("https://api.ipify.org?format=json", "ip"),
+            ("https://ifconfig.co/json", "ip"),
+        )
+        for url, key in providers:
+            try:
+                resp = await self._client.get(url, timeout=5.0)
+                resp.raise_for_status()
+                ip = resp.json().get(key)
+                if ip:
+                    self._egress_ip = str(ip)
+                    self._egress_ip_ts = now
+                    return self._egress_ip
+            except Exception:  # noqa: BLE001 - best-effort lookup, try next provider
+                continue
+        return self._egress_ip
 
     # -- header construction --------------------------------------------------
     def _headers(

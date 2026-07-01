@@ -11,6 +11,26 @@ router = APIRouter(tags=["System"])
 
 
 @router.get(
+    "/system/egress-ip",
+    summary="Server outbound IP (the IP to whitelist at mStock)",
+)
+async def egress_ip(client: MStockClient = Depends(get_client)):
+    ip = await client.get_egress_ip()
+    return {
+        "status": "success",
+        "data": {
+            "ip": ip,
+            "help_url": "https://trade.mstock.com",
+            "note": (
+                "Whitelist this IP as Primary/Secondary IP in your mStock API "
+                "settings. This is the address that calls mStock, not your "
+                "device's IP."
+            ),
+        },
+    }
+
+
+@router.get(
     "/mstock/health-statistics",
     tags=["System"],
     summary="mStock upstream health statistics",

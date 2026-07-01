@@ -6,6 +6,7 @@ A fast, production-ready FastAPI gateway over the mStock Trading API (Type A).
 from __future__ import annotations
 
 import logging
+import re
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
@@ -35,6 +36,13 @@ logger = logging.getLogger("ms_fast")
 
 # Paths that bypass gateway-key enforcement.
 _OPEN_PATHS = {"/", "/health", "/docs", "/redoc", "/openapi.json", "/favicon.ico"}
+
+# Detects the mStock "IP address not whitelisted" family of errors.
+_IP_MISMATCH_RE = re.compile(
+    r"(primary\s+and\s+secondary\s+ip|ip\s+address.*(not\s+matching|mismatch|not\s+whitelist)"
+    r"|not\s+matching.*ip\s+address)",
+    re.IGNORECASE,
+)
 
 
 @asynccontextmanager
@@ -124,14 +132,35 @@ def create_app() -> FastAPI:
 
     # --- Exception handlers --------------------------------------------------
     @app.exception_handler(MStockAPIError)
-    async def _mstock_api_error(_: Request, exc: MStockAPIError):
+    async def _mstock_api_error(request: Request, exc: MStockAPIError):
+        data = exc.data
+        message = exc.message
+
+        # If mStock rejects the call because the caller IP isn't whitelisted,
+        # attach the server's outbound IP and clear remediation instructions.
+        if message and _IP_MISMATCH_RE.search(message):
+            client = getattr(request.app.state, "mstock_client", None)
+            server_ip = await client.get_egress_ip() if client else None
+            data = {
+                "ip_whitelist_required": True,
+                "server_ip": server_ip,
+                "help_url": "https://trade.mstock.com",
+                "instructions": (
+                    f"mStock rejected this request because the calling IP is not "
+                    f"whitelisted. Add this server's outbound IP "
+                    f"{f'({server_ip}) ' if server_ip else ''}as the Primary or "
+                    f"Secondary IP in your mStock API settings at "
+                    f"trade.mstock.com, then retry."
+                ),
+            }
+
         return JSONResponse(
             status_code=exc.status_code,
             content={
                 "status": "error",
-                "message": exc.message,
+                "message": message,
                 "error_type": exc.error_type,
-                "data": exc.data,
+                "data": data,
             },
         )
 
