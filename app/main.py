@@ -64,7 +64,7 @@ class GatewayAuthMiddleware(BaseHTTPMiddleware):
         self._gateway_key = gateway_key
 
     async def dispatch(self, request: Request, call_next):
-        if self._gateway_key:
+        if self._gateway_key and request.method != "OPTIONS":
             path = request.url.path
             is_open = path in _OPEN_PATHS or path.startswith("/ws/")
             if not is_open and request.headers.get("X-Gateway-Key") != self._gateway_key:
@@ -104,14 +104,23 @@ def create_app() -> FastAPI:
     )
 
     # --- Middleware ----------------------------------------------------------
+    # NOTE: Starlette applies the LAST-added middleware as the OUTERMOST layer.
+    # The gateway is added first (inner) and CORS last (outer) so that CORS
+    # preflight (OPTIONS) requests are always answered and CORS headers are
+    # attached to every response — including gateway 401s.
+    app.add_middleware(GatewayAuthMiddleware, gateway_key=settings.gateway_api_key)
+
+    allow_all_origins = settings.cors_origins_list == ["*"]
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins_list,
-        allow_credentials=True,
+        # Credentials cannot be combined with the "*" origin wildcard, and the
+        # frontend authenticates via headers (not cookies), so only enable
+        # credentials when explicit origins are configured.
+        allow_credentials=not allow_all_origins,
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    app.add_middleware(GatewayAuthMiddleware, gateway_key=settings.gateway_api_key)
 
     # --- Exception handlers --------------------------------------------------
     @app.exception_handler(MStockAPIError)
